@@ -1,18 +1,30 @@
-class RegistroClass {
+class Registro {
+  int _id = 0;
   double _peso = 0;
   double _altura = 0;
   double _imc = 0;
   String _faixa = "";
-  final DateTime _data = DateTime.now();
+  DateTime _data = DateTime.now();
 
-  RegistroClass(double peso, double altura, double imc, String faixa) {
+  Registro(int id, double peso, double altura, double imc, String faixa) {
+    _id = id;
     _peso = peso;
     _altura = altura;
     _imc = imc;
     _faixa = faixa;
   }
 
+  Registro.comData(int id, double peso, double altura, double imc, String faixa, DateTime data) {
+    _id = id;
+    _peso = peso;
+    _altura = altura;
+    _imc = imc;
+    _faixa = faixa;
+    _data = data;
+  }
+
   // Gets
+  int get id => _id;
   double get peso => _peso;
   double get altura => _altura;
   double get imc => _imc;

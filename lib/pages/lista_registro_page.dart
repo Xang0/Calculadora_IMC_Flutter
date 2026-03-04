@@ -1,4 +1,5 @@
-import 'package:calculadora_imc/models/registro_class.dart';
+import 'package:calculadora_imc/models/registro.dart';
+import 'package:calculadora_imc/repository/registroRepository.dart';
 import 'package:calculadora_imc/services/calculadora_imc.dart';
 import 'package:flutter/material.dart';
 
@@ -13,12 +14,31 @@ class _ListRegistroPageState extends State<ListRegistroPage> {
   TextEditingController pesoController = TextEditingController(text: "");
   TextEditingController alturaController = TextEditingController(text: "");
 
+  RegistroRepository registroRepository = RegistroRepository();
+  List<Registro> _registros = [];
+  
+  int id = 0;
   double peso = 0;
   double altura = 0;
   double imc = 0;
   String faixa = "";
 
-  List<RegistroClass> registros = [];
+  @override
+  void initState() {
+    super.initState();
+
+    obterRegistros();
+  }
+
+  void obterRegistros() async {
+    _registros = await registroRepository.obterDados();
+
+    if (_registros.isNotEmpty) {
+      id = _registros.length;
+    }
+
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,17 +47,21 @@ class _ListRegistroPageState extends State<ListRegistroPage> {
         children: [
           Expanded(
             child: ListView.builder(
-              itemCount: registros.length,
+              itemCount: _registros.length,
               itemBuilder: (BuildContext bc, int index) {
-                var registro = registros[index];
+                var registro = _registros[index];
                 return Column(
                   children: [
                     Dismissible(
-                      key: Key(index.toString()),
-                      onDismissed: (DismissDirection dissmissDirection) {
+                      key: Key(registro.id.toString()),
+                      onDismissed: (DismissDirection dissmissDirection) async {
                         setState(() {
-                          registros.remove(registro);
+                          _registros.removeAt(index);
                         });
+
+                        await registroRepository.remover(registro.id);
+
+                        obterRegistros();
                       },
                       child: ListTile(
                         title: Row(
@@ -53,7 +77,7 @@ class _ListRegistroPageState extends State<ListRegistroPage> {
                             SizedBox(width: 5,),
                             Text("Altura: ${registro.altura}"),
                             SizedBox(width: 5,),
-                            Text("Altura: ${registro.peso}"),
+                            Text("Peso: ${registro.peso}"),
                           ],
                         )
                       )
@@ -103,7 +127,7 @@ class _ListRegistroPageState extends State<ListRegistroPage> {
                         child: Text("Cancelar")
                       ),
                       TextButton(
-                        onPressed: () {
+                        onPressed: () async {
                           bool deuCerto = true;
                           try {
                             peso = double.parse(pesoController.text);
@@ -134,11 +158,11 @@ class _ListRegistroPageState extends State<ListRegistroPage> {
                           if (deuCerto) {
                             imc = CalculadoraImc.calcularIMC(altura, peso);
                             faixa = CalculadoraImc.obterClassificacao(imc);
+                            id += 1;
 
-                            RegistroClass registro = RegistroClass(peso, altura, imc, faixa);
-                            setState(() {
-                              registros.add(registro);
-                            });
+                            Registro registro = Registro(id, peso, altura, imc, faixa);
+                            await registroRepository.salvar(registro);
+                            obterRegistros();
 
                             Navigator.pop(context);
                           }
